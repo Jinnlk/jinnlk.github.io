@@ -1,0 +1,24 @@
+name = "portfolio-chat"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+# Bundle kb.md as a plain text string (imported as KB_TEXT in index.js).
+[[rules]]
+type = "Text"
+globs = ["**/*.md"]
+fallthrough = true
+
+[vars]
+ALLOWED_ORIGIN = "https://jinnlk.github.io"
+
+# Native Workers Rate Limiting binding — caps each visitor IP to 10 requests per 60s.
+# If this feature isn't enabled on your account, comment it out; index.js checks for
+# env.RATE_LIMITER before using it, so the Worker still runs fine without it.
+[[unsafe.bindings]]
+name = "RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "1001"
+simple = { limit = 10, period = 60 }
+
+# Set the secret separately (do not put it in this file):
+#   wrangler secret put ANTHROPIC_API_KEY
