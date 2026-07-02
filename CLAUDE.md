@@ -42,9 +42,11 @@ Key patterns to preserve when editing:
 
 A small Cloudflare Worker (`worker/index.js`) proxies chat requests to Claude Haiku so the Anthropic API key never touches the browser. It bundles `worker/kb.md` (a distilled, Q&A-friendly rewrite of the page's bio/experience/projects/orgs content — kept in sync manually, not generated from `index.html`) into the system prompt on every request; the corpus is small enough that this "stuff the whole KB in context" approach is used instead of real retrieval/embeddings. CORS is locked to `ALLOWED_ORIGIN` in `worker/wrangler.toml`, and an optional native Workers rate-limit binding caps abuse. See `worker/README.md` for deploy steps (`wrangler secret put ANTHROPIC_API_KEY`, `wrangler deploy`) — this is separate infrastructure from GitHub Pages and must be deployed on its own.
 
+The Worker is deployed and live at `portfolio-chat.jinnlm.workers.dev`, wired up via `ASK_ENDPOINT` in `index.html`. Redeploy with `wrangler deploy` after any change to `worker/index.js` or `worker/kb.md` — the deployed Worker doesn't auto-update from the repo.
+
 If you touch the bio content in `index.html`, consider updating `worker/kb.md` to match so the chatbot's answers don't drift from the page.
 
 ## Gotchas
 
 - The resume download link (`<a href="resume.pdf" download>` in the Contact section) points to `resume.pdf`, but the actual file in the repo is `Jinn_Lim_Data_Engineer_Resume.pdf`. If touching the resume link or file, verify the `href` and actual filename match.
-- `ASK_ENDPOINT` in the chatbot's `<script>` block is a placeholder (`https://portfolio-chat.YOUR-SUBDOMAIN.workers.dev`) until the Worker in `worker/` is deployed and the real URL is substituted in. Until then, the chat widget renders but every question falls back to its error message.
+- If `ASK_ENDPOINT` in the chatbot's `<script>` block ever gets reset to a placeholder value (e.g. after copy-pasting the section elsewhere), the chat widget still renders but every question fails with a CORS error in the console, since the placeholder domain has no matching Worker to send back an `Access-Control-Allow-Origin` header. Confirm it points at the real deployed Worker URL and that the change has actually been pushed (GitHub Pages serves whatever is on `main`, not your local working tree).
